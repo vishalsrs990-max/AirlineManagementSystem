@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flights (SQLite)</title>
+</head>
+<body>
+<h2>Flights Stored in SQLite</h2>
+{% if flights %}
+<table border="1">
+    <tr>
+        <th>Flight ID</th>
+        <th>Origin</th>
+        <th>Destination</th>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Actions</th>
+    </tr>
+    {% for flight in flights %}
+    <tr>
+        <td>{{ flight.flightID }}</td>
+        <td>{{ flight.Origin }}</td>
+        <td>{{ flight.Destination }}</td>
+        <td>{{ flight.Date }}</td>
+        <td>{{ flight.Time }}</td>
+        <td>
+            <a href="/update/{{ flight.flightID }}">Edit</a> |
+            <a href="/delete/{{ flight.flightID }}">Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No flights found in SQLite.</p>
+{% endif %}
+</body>
+</html>

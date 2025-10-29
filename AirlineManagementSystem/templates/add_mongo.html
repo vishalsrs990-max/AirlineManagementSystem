@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head><title>Add Flight</title></head>
+<body>
+<h2>Add Flight to MongoDB</h2>
+
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<ul>
+    {% for message in messages %}
+    <li>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endwith %}
+
+<form method="POST">
+    Flight ID: <input type="text" name="flightID"><br>
+    Origin: <input type="text" name="origin"><br>
+    Destination: <input type="text" name="destination"><br>
+    Date: <input type="date" name="date"><br>
+    Time: <input type="time" name="time"><br>
+    <input type="submit" value="Add Flight">
+</form>
+</body>
+</html>

@@ -1,0 +1,5 @@
+# @app.route('/flights_dynamo')
+# def flights_dynamo():
+#     response = dynamo_table.scan()
+#     flights = response['Items']
+#     return render_template('flights_dynamo.html', flights=flights)
