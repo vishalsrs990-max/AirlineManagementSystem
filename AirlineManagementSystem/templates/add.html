@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Flight</title>
+</head>
+<body>
+<h2>Add a New Flight</h2>
+<form method="POST" action="/add">
+    <label for="flightID">Flight ID:</label>
+    <input type="text" name="flightID" required><br>
+
+    <label for="origin">Origin:</label>
+    <input type="text" name="origin" required><br>
+
+    <label for="destination">Destination:</label>
+    <input type="text" name="destination" required><br>
+
+    <label for="date">Date:</label>
+    <input type="date" name="date" required><br>
+
+    <label for="time">Time:</label>
+    <input type="time" name="time" required><br>
+
+    <button type="submit">Add Flight</button>
+</form>
+</body>
+</html>

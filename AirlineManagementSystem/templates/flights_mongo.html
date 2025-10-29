@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head><title>Flights List</title></head>
+<body>
+<h2>Flights Stored in MongoDB</h2>
+
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<ul>
+    {% for message in messages %}
+    <li>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endwith %}
+
+<table border="1">
+    <tr>
+        <th>Flight ID</th><th>Origin</th><th>Destination</th><th>Date</th><th>Time</th><th>Actions</th>
+    </tr>
+    {% for flight in flights %}
+    <tr>
+        <td>{{ flight.flightID }}</td>
+        <td>{{ flight.origin }}</td>
+        <td>{{ flight.destination }}</td>
+        <td>{{ flight.date }}</td>
+        <td>{{ flight.time }}</td>
+        <td>
+            <a href="/update/{{ flight.flightID }}">Update</a> |
+            <a href="/delete/{{ flight.flightID }}">Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+</body>
+</html>
