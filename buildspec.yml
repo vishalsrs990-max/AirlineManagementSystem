@@ -1,0 +1,13 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - pip install -r requirements.txt
+  build:
+    commands:
+      - echo "Build successful"
+  post_build:
+    commands:
+      - echo "Triggering Render deploy"
+      - curl -X POST $RENDER_DEPLOY_HOOK
