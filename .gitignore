@@ -1,0 +1,11 @@
+IntelliJ IDEA Community Edition 2025.2.4/
+venv/
+.venv/
+*.jar
+*.dll
+*.exe
+*.zip
+*.bin
+*.db
+__pycache__/
+.idea/

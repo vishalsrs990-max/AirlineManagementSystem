@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update Flight</title>
+</head>
+<body>
+    <h1>Update Flight</h1>
+    <form method="POST">
+        <label>Flight Number:</label><br>
+        <input type="text" name="flight_number" value="{{ flight[1] }}" required><br><br>
+
+        <label>Origin:</label><br>
+        <input type="text" name="origin" value="{{ flight[2] }}" required><br><br>
+
+        <label>Destination:</label><br>
+        <input type="text" name="destination" value="{{ flight[3] }}" required><br><br>
+
+        <label>Date:</label><br>
+        <input type="date" name="date" value="{{ flight[4] }}" required><br><br>
+
+        <label>Time:</label><br>
+        <input type="time" name="time" value="{{ flight[5] }}" required><br><br>
+
+        <button type="submit">Update Flight</button>
+    </form>
+</body>
+</html>

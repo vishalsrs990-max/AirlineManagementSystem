@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flights (DynamoDB)</title>
+</head>
+<body>
+<h2>Flights Stored in DynamoDB</h2>
+{% if flights %}
+<table border="1">
+    <tr>
+        <th>Flight ID</th>
+        <th>Origin</th>
+        <th>Destination</th>
+        <th>Date</th>
+        <th>Time</th>
+    </tr>
+    {% for flight in flights %}
+    <tr>
+        <td>{{ flight.flightID }}</td>
+        <td>{{ flight.Origin }}</td>
+        <td>{{ flight.Destination }}</td>
+        <td>{{ flight.Date }}</td>
+        <td>{{ flight.Time }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No flights found in DynamoDB.</p>
+{% endif %}
+</body>
+</html>
