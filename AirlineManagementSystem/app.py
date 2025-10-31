@@ -1,71 +1,65 @@
+from flask import Flask, render_template, request, redirect, flash
+from flask_pymongo import PyMongo
+
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'  # Replace with any random string
+app.secret_key = "your_secret_key"  # Required for flashing messages
 
-# MongoDB connection
-client = MongoClient('mongodb://localhost:27017/')
-db = client['flights_db']
-mongo_collection = db['flights']
+# MongoDB connection (local)
+app.config["MONGO_URI"] = "mongodb://localhost:27017/airline_db"
+mongo = PyMongo(app)
 
-# Homepage
+# Home route (optional)
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return redirect('/add')
 
-# Add flight
-@app.route('/add_mongo', methods=['GET', 'POST'])
-def add_mongo():
-    if request.method == 'POST':
-        flightID = request.form['flightID']
-        origin = request.form['origin']
-        destination = request.form['destination']
-        date = request.form['date']
-        time = request.form['time']
+# Route to display form and SQLite flights
+@app.route('/add')
+def add():
+    # Dummy SQLite data for display (replace with actual DB query if needed)
+    flights = [
+        {"flightID": "AI101", "Origin": "London", "Destination": "Delhi", "Date": "2025-11-01", "Time": "10:00"},
+        {"flightID": "AI102", "Origin": "Paris", "Destination": "Mumbai", "Date": "2025-11-02", "Time": "12:00"}
+    ]
+    return render_template('add_flight.html', flights=flights)
 
-        if not flightID or not origin or not destination or not date or not time:
-            flash("❌ All fields are required.")
-            return redirect('/add_mongo')
+# Route to handle MongoDB flight submission
+@app.route('/add_flight', methods=['POST'])
+def add_flight():
+    flight_id = request.form.get('flight_id')
+    origin = request.form.get('origin')
+    destination = request.form.get('destination')
+    date = request.form.get('date')
+    time = request.form.get('time')
 
-        mongo_collection.insert_one({
-            'flightID': flightID,
-            'origin': origin,
-            'destination': destination,
-            'date': date,
-            'time': time
-        })
+    print("Form Data:", request.form)  # Debug log
 
-        flash("✅ Flight added successfully!")
-        return redirect('/flights_mongo')
-    return render_template('add_mongo.html')
+    if not all([flight_id, origin, destination, date, time]):
+        flash("❌ All fields are required.")
+        return redirect('/add')
 
-# View flights
-@app.route('/flights_mongo')
-def flights_mongo():
-    flights = list(mongo_collection.find())
-    return render_template('flights_mongo.html', flights=flights)
+    flight = {
+        "flight_id": flight_id,
+        "origin": origin,
+        "destination": destination,
+        "date": date,
+        "time": time
+    }
 
-# Delete flight
-@app.route('/delete/<flight_id>')
-def delete_flight(flight_id):
-    mongo_collection.delete_one({'flightID': flight_id})
-    flash(f"🗑️ Flight {flight_id} deleted.")
-    return redirect('/flights_mongo')
+    try:
+        mongo.db.flights.insert_one(flight)
+        flash("✅ Flight added successfully to MongoDB!")
+    except Exception as e:
+        print("MongoDB Error:", e)
+        flash("❌ Failed to add flight. Check MongoDB connection.")
 
-# Update flight
-@app.route('/update/<flight_id>', methods=['GET', 'POST'])
-def update_flight(flight_id):
-    flight = mongo_collection.find_one({'flightID': flight_id})
-    if request.method == 'POST':
-        updated_data = {
-            'flightID': request.form['flightID'],
-            'origin': request.form['origin'],
-            'destination': request.form['destination'],
-            'date': request.form['date'],
-            'time': request.form['time']
-        }
-        mongo_collection.update_one({'flightID': flight_id}, {'$set': updated_data})
-        flash(f"✏️ Flight {flight_id} updated.")
-        return redirect('/flights_mongo')
-    return render_template('update_mongo.html', flight=flight)
+    return redirect('/add')
+
+# Optional route to view MongoDB flights
+@app.route('/flights')
+def view_flights():
+    flights = list(mongo.db.flights.find())
+    return render_template('mongo_flights.html', flights=flights)
 
 if __name__ == '__main__':
     app.run(debug=True)

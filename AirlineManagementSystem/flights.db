@@ -1,0 +1,21 @@
+import sqlite3
+
+# Connect to (or create) the database file
+conn = sqlite3.connect('flights.db')
+cursor = conn.cursor()
+
+# Create the 'flights' table if it doesn't exist
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS flights (
+        flightID TEXT PRIMARY KEY,
+        origin TEXT NOT NULL,
+        destination TEXT NOT NULL,
+        date TEXT NOT NULL,
+        time TEXT NOT NULL
+    )
+''')
+
+conn.commit()
+conn.close()
+
+print("✅ flights.db created with 'flights' table.")

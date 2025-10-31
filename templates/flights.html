@@ -4,6 +4,29 @@
     <title>Flights (SQLite)</title>
 </head>
 <body>
+
+<h2>Add Flight to MongoDB</h2>
+<form method="POST" action="/add_flight">
+    <label>Flight ID:</label>
+    <input type="text" name="flight_id" required><br><br>
+
+    <label>Origin:</label>
+    <input type="text" name="origin" required><br><br>
+
+    <label>Destination:</label>
+    <input type="text" name="destination" required><br><br>
+
+    <label>Date:</label>
+    <input type="date" name="date" required><br><br>
+
+    <label>Time:</label>
+    <input type="time" name="time" required><br><br>
+
+    <button type="submit">Add Flight</button>
+</form>
+
+<hr>
+
 <h2>Flights Stored in SQLite</h2>
 {% if flights %}
 <table border="1">
@@ -32,5 +55,6 @@
 {% else %}
 <p>No flights found in SQLite.</p>
 {% endif %}
+
 </body>
 </html>

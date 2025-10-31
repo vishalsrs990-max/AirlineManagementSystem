@@ -1,6 +1,6 @@
 services:
   - type: web
     name: airline-app
-    env: python
+    env: python 3
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
