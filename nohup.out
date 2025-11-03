@@ -1,0 +1,62 @@
+[2025-11-03 01:30:22 +0000] [2911] [INFO] Starting gunicorn 23.0.0
+[2025-11-03 01:30:22 +0000] [2911] [INFO] Listening at: http://0.0.0.0:8080 (2911)
+[2025-11-03 01:30:22 +0000] [2911] [INFO] Using worker: sync
+[2025-11-03 01:30:22 +0000] [2912] [INFO] Booting worker with pid: 2912
+[2025-11-03 01:36:21,089] ERROR in app: Exception on /add_mongo [POST]
+Traceback (most recent call last):
+  File "/home/ubuntu/AirlineManagementSystem/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/AirlineManagementSystem/venv/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/AirlineManagementSystem/venv/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/AirlineManagementSystem/venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/AirlineManagementSystem/app.py", line 31, in add_mongo
+    mongo_collection.insert_one({
+  File "/home/ubuntu/AirlineManagementSystem/venv/lib/python3.12/site-packages/pymongo/synchronous/collection.py", line 891, in insert_one
+    self._insert_one(
+  File "/home/ubuntu/AirlineManagementSystem/venv/lib/python3.12/site-packages/pymongo/synchronous/collection.py", line 831, in _insert_one
+    self._database.client._retryable_write(
+  File "/home/ubuntu/AirlineManagementSystem/venv/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2082, in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/AirlineManagementSystem/venv/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 1968, in _retry_with_session
+    return self._retry_internal(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/AirlineManagementSystem/venv/lib/python3.12/site-packages/pymongo/_csot.py", line 125, in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/AirlineManagementSystem/venv/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2014, in _retry_internal
+    ).run()
+      ^^^^^
+  File "/home/ubuntu/AirlineManagementSystem/venv/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2765, in run
+    return self._read() if self._is_read else self._write()
+                                              ^^^^^^^^^^^^^
+  File "/home/ubuntu/AirlineManagementSystem/venv/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2875, in _write
+    self._server = self._get_server()
+                   ^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/AirlineManagementSystem/venv/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 2858, in _get_server
+    return self._client._select_server(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/AirlineManagementSystem/venv/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py", line 1833, in _select_server
+    server = topology.select_server(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/AirlineManagementSystem/venv/lib/python3.12/site-packages/pymongo/synchronous/topology.py", line 409, in select_server
+    server = self._select_server(
+             ^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/AirlineManagementSystem/venv/lib/python3.12/site-packages/pymongo/synchronous/topology.py", line 387, in _select_server
+    servers = self.select_servers(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/AirlineManagementSystem/venv/lib/python3.12/site-packages/pymongo/synchronous/topology.py", line 294, in select_servers
+    server_descriptions = self._select_servers_loop(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/AirlineManagementSystem/venv/lib/python3.12/site-packages/pymongo/synchronous/topology.py", line 344, in _select_servers_loop
+    raise ServerSelectionTimeoutError(
+pymongo.errors.ServerSelectionTimeoutError: localhost:27017: [Errno 111] Connection refused (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 30s, Topology Description: <TopologyDescription id: 690805ae858c0375fdcca835, topology_type: Unknown, servers: [<ServerDescription ('localhost', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('localhost:27017: [Errno 111] Connection refused (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
+[2025-11-03 01:42:22 +0000] [2912] [INFO] Parent changed, shutting down: <Worker 2912>
+[2025-11-03 01:42:22 +0000] [2912] [INFO] Worker exiting (pid: 2912)
