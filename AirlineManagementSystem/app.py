@@ -1,5 +1,9 @@
+from flask import Flask, render_template, request, redirect, flash
+from pymongo import MongoClient
+
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'  # Replace with any random string
+app.config['DEBUG'] = True
+app.secret_key = 'your_secret_key_here'  # Replace with a secure random string
 
 # MongoDB connection
 client = MongoClient('mongodb://localhost:27017/')
@@ -68,4 +72,4 @@ def update_flight(flight_id):
     return render_template('update_mongo.html', flight=flight)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

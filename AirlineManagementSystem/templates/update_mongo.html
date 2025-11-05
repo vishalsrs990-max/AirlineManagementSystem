@@ -1,26 +1,27 @@
 <!DOCTYPE html>
 <html>
-<head><title>Update Flight</title></head>
+<head>
+    <title>Update Flight</title>
+</head>
 <body>
-<h2>Update Flight</h2>
-
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-<ul>
-    {% for message in messages %}
-    <li>{{ message }}</li>
-    {% endfor %}
-</ul>
-{% endif %}
-{% endwith %}
-
+<h2>Update Flight {{ flight.flightID }}</h2>
 <form method="POST">
-    Flight ID: <input type="text" name="flightID" value="{{ flight.flightID }}"><br>
-    Origin: <input type="text" name="origin" value="{{ flight.origin }}"><br>
-    Destination: <input type="text" name="destination" value="{{ flight.destination }}"><br>
-    Date: <input type="date" name="date" value="{{ flight.date }}"><br>
-    Time: <input type="time" name="time" value="{{ flight.time }}"><br>
-    <input type="submit" value="Update Flight">
+    <label>Flight ID:</label>
+    <input type="text" name="flightID" value="{{ flight.flightID }}" required><br>
+
+    <label>Origin:</label>
+    <input type="text" name="origin" value="{{ flight.origin }}" required><br>
+
+    <label>Destination:</label>
+    <input type="text" name="destination" value="{{ flight.destination }}" required><br>
+
+    <label>Date:</label>
+    <input type="date" name="date" value="{{ flight.date }}" required><br>
+
+    <label>Time:</label>
+    <input type="time" name="time" value="{{ flight.time }}" required><br>
+
+    <button type="submit">Update Flight</button>
 </form>
 </body>
 </html>

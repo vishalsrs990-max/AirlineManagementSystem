@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html>
-<head><title>Add Flight</title></head>
+<head>
+    <title>Add Flight</title>
+</head>
 <body>
-<h2>Add Flight to MongoDB</h2>
-
+<h2>Add a New Flight</h2>
 {% with messages = get_flashed_messages() %}
 {% if messages %}
 <ul>
@@ -13,14 +14,23 @@
 </ul>
 {% endif %}
 {% endwith %}
-
 <form method="POST">
-    Flight ID: <input type="text" name="flightID"><br>
-    Origin: <input type="text" name="origin"><br>
-    Destination: <input type="text" name="destination"><br>
-    Date: <input type="date" name="date"><br>
-    Time: <input type="time" name="time"><br>
-    <input type="submit" value="Add Flight">
+    <label>Flight ID:</label>
+    <input type="text" name="flightID" required><br>
+
+    <label>Origin:</label>
+    <input type="text" name="origin" required><br>
+
+    <label>Destination:</label>
+    <input type="text" name="destination" required><br>
+
+    <label>Date:</label>
+    <input type="date" name="date" required><br>
+
+    <label>Time:</label>
+    <input type="time" name="time" required><br>
+
+    <button type="submit">Add Flight</button>
 </form>
 </body>
 </html>

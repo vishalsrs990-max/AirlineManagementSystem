@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html>
-<head><title>Flights List</title></head>
+<head>
+    <title>Flight List</title>
+</head>
 <body>
-<h2>Flights Stored in MongoDB</h2>
-
+<h2>All Flights</h2>
 {% with messages = get_flashed_messages() %}
 {% if messages %}
 <ul>
@@ -13,10 +14,14 @@
 </ul>
 {% endif %}
 {% endwith %}
-
 <table border="1">
     <tr>
-        <th>Flight ID</th><th>Origin</th><th>Destination</th><th>Date</th><th>Time</th><th>Actions</th>
+        <th>Flight ID</th>
+        <th>Origin</th>
+        <th>Destination</th>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Actions</th>
     </tr>
     {% for flight in flights %}
     <tr>
