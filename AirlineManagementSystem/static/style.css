@@ -1,0 +1,210 @@
+/* General page layout */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body.page {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background-color: #f3f5fb;
+    color: #111322;
+}
+
+/* Top bar (nav like Finnair) */
+.top-bar {
+    background-color: #050b3d;
+    color: white;
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    background: white;
+    color: #050b3d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-name {
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.brand-subtitle {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.top-nav a {
+    color: white;
+    text-decoration: none;
+    margin-left: 24px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.top-nav a:hover {
+    text-decoration: underline;
+}
+
+/* Two-column main layout */
+.layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 32px;
+    padding: 32px 40px 40px 40px;
+}
+
+/* Side navigation */
+.side-nav {
+    background-color: #ffffff;
+    padding: 24px 20px;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.side-nav h2 {
+    font-size: 16px;
+    margin-bottom: 16px;
+}
+
+.side-nav ul {
+    list-style: none;
+}
+
+.side-nav li {
+    padding: 8px 4px;
+    font-size: 14px;
+    color: #4b5563;
+    cursor: pointer;
+}
+
+.side-nav li.active {
+    font-weight: 600;
+    color: #050b3d;
+    border-left: 4px solid #050b3d;
+    padding-left: 8px;
+}
+
+/* Main content */
+.content h1 {
+    font-size: 32px;
+    margin-bottom: 20px;
+    color: #111322;
+}
+
+/* Hero section */
+.hero-card {
+    background-color: #ffffff;
+    border-radius: 20px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.3fr);
+    gap: 24px;
+    padding: 24px 24px 24px 32px;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.14);
+    margin-bottom: 28px;
+    align-items: center;
+}
+
+.hero-text p {
+    font-size: 15px;
+    line-height: 1.5;
+    color: #4b5563;
+    margin-bottom: 18px;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-primary,
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: #050b3d;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #141b5c;
+}
+
+.btn-secondary {
+    background-color: #e5e7ff;
+    color: #050b3d;
+}
+
+.btn-secondary:hover {
+    background-color: #d3d7ff;
+}
+
+.hero-image img {
+    width: 100%;
+    border-radius: 16px;
+    object-fit: cover;
+    max-height: 280px;
+}
+
+/* Info cards grid */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.info-card {
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+.info-card h3 {
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: #111322;
+}
+
+.info-card p {
+    font-size: 14px;
+    color: #4b5563;
+}
+
+/* Footer */
+.footer {
+    padding: 16px 40px 24px 40px;
+    font-size: 13px;
+    color: #6b7280;
+}

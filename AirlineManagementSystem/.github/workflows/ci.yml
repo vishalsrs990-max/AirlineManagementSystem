@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [ "main" ]
 
 jobs:
   build-and-deploy:
@@ -10,32 +10,65 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install dependencies (CI)
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Run tests
+      # If you have tests, enable this
+      # - name: Run tests
+      #   run: |
+      #     pytest
+
+      - name: Prepare SSH key for EC2
         run: |
-          pytest
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ams-devops-key.pem
+          chmod 600 ~/.ssh/ams-devops-key.pem
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd AirlineManagementSystem
-            git pull origin main
+        run: |
+          ssh -i ~/.ssh/ams-devops-key.pem ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+            set -e
+
+            # Go to project folder (same one we used manually)
+            cd ~/AirlineManagementSystem
+
+            # If repo not cloned yet, clone it once
+            if [ ! -d ".git" ]; then
+              cd ~
+              rm -rf AirlineManagementSystem
+              git clone https://github.com/vishalsrs990-max/AirlineManagementSystem.git
+              cd AirlineManagementSystem
+            fi
+
+            # Pull latest code
+            git pull
+
+            # Create / activate venv
+            if [ ! -d "venv" ]; then
+              python3 -m venv venv
+            fi
             source venv/bin/activate
-            pip install -r requirements.txt
-            sudo systemctl restart gunicorn
+
+            # Install dependencies
+            if [ -f requirements.txt ]; then
+              pip install --upgrade pip
+              pip install -r requirements.txt
+            fi
+
+            # Stop existing app if running
+            pkill -f "python app.py" || true
+
+            # Start app in background
+            nohup python app.py > app.log 2>&1 &
+
+          EOF

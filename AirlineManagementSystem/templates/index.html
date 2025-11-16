@@ -1,12 +1,94 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Airline Management System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Link to our stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 </head>
-<body>
-<h1>Welcome to Airline Management System</h1>
-<p>This is your homepage.</p>
-<a href="/add_mongo">Add Flight</a> |
-<a href="/flights_mongo">View Flights</a>
+<body class="page">
+
+<!-- Top bar -->
+<header class="top-bar">
+    <div class="top-bar-left">
+        <div class="logo-circle">AMS</div>
+        <div class="brand-text">
+            <span class="brand-name">Airline Management System</span>
+            <span class="brand-subtitle">Flight information & management</span>
+        </div>
+    </div>
+
+    <nav class="top-nav">
+        <a href="#">Book</a>
+        <a href="#">Manage</a>
+        <a href="#">Check in</a>
+        <a href="{{ url_for('add_flight') }}">Admin</a>
+    </nav>
+</header>
+
+<!-- Main two-column layout -->
+<main class="layout">
+    <!-- Left side menu -->
+    <aside class="side-nav">
+        <h2>Flight information</h2>
+        <ul>
+            <li class="active">Flight information</li>
+            <li>Travel updates</li>
+            <li>Timetables</li>
+            <li>Disruptions</li>
+            <li>How to change your flight</li>
+            <li>Fleet information</li>
+        </ul>
+    </aside>
+
+    <!-- Main content area -->
+    <section class="content">
+        <h1>Flight information</h1>
+
+        <!-- Hero section with image -->
+        <section class="hero-card">
+            <div class="hero-text">
+                <p>
+                    Stay up to date with the latest flight schedules, routes and live status
+                    from your Airline Management System project.
+                </p>
+                <div class="hero-actions">
+                    <a href="{{ url_for('flights_mongo') }}" class="btn-primary">View flights</a>
+                    <a href="{{ url_for('add_flight') }}" class="btn-secondary">Add new flight</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <!-- Put your own airplane image at static/images/airplane.jpg -->
+                <img src="{{ url_for('static', filename='images/airplane.jpg') }}"
+                     alt="Airplane flying above the clouds">
+            </div>
+        </section>
+
+        <!-- Info cards under hero -->
+        <section class="info-grid">
+            <article class="info-card">
+                <h3>Live flight data</h3>
+                <p>Flights are loaded from MongoDB so you can demo database integration in your project.</p>
+            </article>
+
+            <article class="info-card">
+                <h3>Manage routes</h3>
+                <p>Use the “Add Flight” form to quickly create new flights for testing and demos.</p>
+            </article>
+
+            <article class="info-card">
+                <h3>Deployed with CI/CD</h3>
+                <p>This application is deployed automatically to EC2 using GitHub Actions.</p>
+            </article>
+        </section>
+    </section>
+</main>
+
+<!-- Footer -->
+<footer class="footer">
+    <p>Deployed via GitHub Actions CI/CD • Airline Management System</p>
+</footer>
 </body>
 </html>
