@@ -1,4 +1,4 @@
-/* General page layout */
+/* Reset / base */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -11,10 +11,10 @@ body.page {
     color: #111322;
 }
 
-/* Top bar (nav like Finnair) */
+/* Top bar */
 .top-bar {
     background-color: #050b3d;
-    color: white;
+    color: #fff;
     padding: 16px 40px;
     display: flex;
     align-items: center;
@@ -31,7 +31,7 @@ body.page {
     width: 40px;
     height: 40px;
     border-radius: 999px;
-    background: white;
+    background: #fff;
     color: #050b3d;
     display: flex;
     align-items: center;
@@ -56,7 +56,7 @@ body.page {
 }
 
 .top-nav a {
-    color: white;
+    color: #fff;
     text-decoration: none;
     margin-left: 24px;
     font-size: 14px;
@@ -67,17 +67,17 @@ body.page {
     text-decoration: underline;
 }
 
-/* Two-column main layout */
+/* Two-column layout */
 .layout {
     display: grid;
     grid-template-columns: 260px minmax(0, 1fr);
     gap: 32px;
-    padding: 32px 40px 40px 40px;
+    padding: 32px 40px 40px;
 }
 
 /* Side navigation */
 .side-nav {
-    background-color: #ffffff;
+    background-color: #fff;
     padding: 24px 20px;
     border-radius: 16px;
     box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
@@ -115,7 +115,7 @@ body.page {
 
 /* Hero section */
 .hero-card {
-    background-color: #ffffff;
+    background-color: #fff;
     border-radius: 20px;
     display: grid;
     grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.3fr);
@@ -138,6 +138,7 @@ body.page {
     gap: 12px;
 }
 
+/* Buttons */
 .btn-primary,
 .btn-secondary {
     display: inline-flex;
@@ -150,61 +151,52 @@ body.page {
     border: none;
     text-decoration: none;
     cursor: pointer;
-}
-
-.btn-primary {
     background-color: #050b3d;
-    color: white;
+    color: #fff;
 }
 
-.btn-primary:hover {
+.btn-primary:hover,
+.btn-secondary:hover {
     background-color: #141b5c;
 }
 
-.btn-secondary {
-    background-color: #e5e7ff;
-    color: #050b3d;
-}
-
-.btn-secondary:hover {
-    background-color: #d3d7ff;
-}
-
-.hero-image img {
+/* Flights table */
+.flights-table {
     width: 100%;
-    border-radius: 16px;
-    object-fit: cover;
-    max-height: 280px;
-}
-
-/* Info cards grid */
-.info-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
-}
-
-.info-card {
-    background-color: #ffffff;
-    border-radius: 16px;
-    padding: 18px 20px;
-    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
-}
-
-.info-card h3 {
-    font-size: 16px;
-    margin-bottom: 8px;
-    color: #111322;
-}
-
-.info-card p {
+    border-collapse: collapse;
     font-size: 14px;
-    color: #4b5563;
 }
 
-/* Footer */
-.footer {
-    padding: 16px 40px 24px 40px;
+.flights-table th,
+.flights-table td {
+    border: 1px solid #050b3d;
+    padding: 8px 10px;
+    text-align: left;
+}
+
+.flights-table thead {
+    background-color: #050b3d;
+    color: #fff;
+}
+
+.flights-table td.actions a {
+    display: inline-block;
+    margin: 0 4px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    border: 1px solid #050b3d;
+    background-color: #050b3d;
+    color: #fff;
+    text-decoration: none;
     font-size: 13px;
-    color: #6b7280;
+    font-weight: 500;
+}
+
+.flights-table td.actions a.delete-link {
+    border-color: #b91c1c;
+    background-color: #b91c1c;
+}
+
+.flights-table td.actions a:hover {
+    opacity: 0.9;
 }

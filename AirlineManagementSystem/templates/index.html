@@ -21,9 +21,6 @@
     </div>
 
     <nav class="top-nav">
-        <a href="#">Book</a>
-        <a href="#">Manage</a>
-        <a href="#">Check in</a>
         <a href="{{ url_for('add_mongo') }}">Admin</a>
     </nav>
 </header>
@@ -35,11 +32,6 @@
         <h2>Flight information</h2>
         <ul>
             <li class="active">Flight information</li>
-            <li>Travel updates</li>
-            <li>Timetables</li>
-            <li>Disruptions</li>
-            <li>How to change your flight</li>
-            <li>Fleet information</li>
         </ul>
     </aside>
 
@@ -49,10 +41,6 @@
 
         <!-- Hero section with image -->
         <section class="hero-card">
-            < class="hero-text">
-                <p>
-                    Stay up to date with the latest flight schedules, routes and live status
-                    from your Airline Management System project.
                 </p>
                 <div class="hero-actions">
                     <a href="{{ url_for('flights_mongo') }}" class="btn-primary">View flights</a>
@@ -68,8 +56,6 @@
         <!-- Single info card under hero -->
         <section class="info-grid">
             <article class="info-card">
-                <h3>Live flight data</h3>
-                <p>Flights are loaded from MongoDB so you can demo database integration in your project.</p>
             </article>
         </section>
     </section>
