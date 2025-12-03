@@ -33,3 +33,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=vishalsrs990-max_AirlineManagementSystem
+            -Dsonar.organization=vishalsrs990-max
+            -Dsonar.python.version=3.11
+            -Dsonar.sources=.
+            -Dsonar.exclusions=venv/**,__pycache__/**,.git/**
