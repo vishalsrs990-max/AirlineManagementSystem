@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Registration</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="page">
+<header class="top-bar">
+    <div class="top-bar-left">
+        <div class="logo-circle">AMS</div>
+        <div class="brand-text">
+            <span class="brand-name">Airline Management System</span>
+            <span class="brand-subtitle">Flight information &amp; management</span>
+        </div>
+    </div>
+</header>
+
+<main class="form-page">
+    <section class="form-card">
+        <h1>Create an account</h1>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for message in messages %}
+            <div class="flash-message">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <form method="post">
+            <div class="form-group">
+                <label>Full name</label>
+                <input class="form-input" name="name" required>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input class="form-input" type="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input class="form-input" type="password" name="password" required>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Register</button>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

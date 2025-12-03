@@ -200,3 +200,124 @@ body.page {
 .flights-table td.actions a:hover {
     opacity: 0.9;
 }
+
+.user-role-label {
+    margin-right: 16px;
+    font-weight: 600;
+    opacity: 0.9;
+    cursor: default;          /* no hand cursor */
+    text-decoration: none;    /* no underline */
+}
+/* Search card under "Book a flight" / "My bookings" */
+
+.search-card {
+    margin-top: 24px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+    padding: 20px 24px 24px 24px;
+}
+
+.search-header {
+    margin-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 8px;
+}
+
+.search-tabs {
+    display: inline-flex;
+    gap: 16px;
+}
+
+.search-tab {
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 500;
+    color: #0f766e;
+    padding: 6px 0;
+    cursor: pointer;
+}
+
+.search-tab-active {
+    border-bottom: 2px solid #0f766e;
+}
+
+/* Form layout */
+
+.search-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.search-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.search-row:first-of-type {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.search-row-submit {
+    justify-content: flex-end;
+    display: flex;
+}
+
+.search-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.search-field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #4b5563;
+}
+
+.search-field input,
+.search-field select {
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    padding: 8px 10px;
+    font-size: 14px;
+    outline: none;
+}
+
+.search-field input:focus,
+.search-field select:focus {
+    border-color: #0f766e;
+}
+
+/* Make it stack nicely on small screens */
+@media (max-width: 900px) {
+    .search-row {
+        grid-template-columns: 1fr;
+    }
+
+    .search-row:first-of-type {
+        grid-template-columns: 1fr;
+    }
+
+    .search-row-submit {
+        justify-content: stretch;
+    }
+
+    .search-row-submit .btn-primary {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Make hero image full width under search card */
+.hero-image-full img {
+    width: 100%;
+    max-width: 100%;
+    display: block;
+    border-radius: 16px;
+    margin-top: 24px;
+}

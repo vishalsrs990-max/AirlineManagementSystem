@@ -21,42 +21,55 @@
     </div>
 
     <nav class="top-nav">
-        <a href="{{ url_for('add_mongo') }}">Admin</a>
+        {% if session.get('user_id') %}
+        <!-- User goes to Add a new flight -->
+        <a href="{{ url_for('add_mongo') }}" class="user-role-link">User</a>
+
+        <a href="{{ url_for('home') }}">Home</a>
+        <span class="user-name">Hi, {{ session.get('user_name') }}</span>
+        <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('register') }}">Register</a>
+        {% endif %}
     </nav>
 </header>
 
-<!-- Main two-column layout -->
-<main class="layout">
-    <!-- Left side menu -->
-    <aside class="side-nav">
-        <h2>Flight information</h2>
-        <ul>
-            <li class="active">Flight information</li>
-        </ul>
-    </aside>
-
-    <!-- Main content area -->
+<!-- Main layout: single column (no sidebar) -->
+<main class="layout-single">
     <section class="content">
         <h1>Flight information</h1>
 
-        <!-- Hero section with image -->
+        <!-- Hero section with text + buttons + images -->
         <section class="hero-card">
-                </p>
-                <div class="hero-actions">
-                    <a href="{{ url_for('flights_mongo') }}" class="btn-primary">View flights</a>
-                    <a href="{{ url_for('add_mongo') }}" class="btn-secondary">Add new flight</a>
-                </div>
+            <p>
+                Search flights, book tickets, and manage your bookings in one place.
+            </p>
+
+            <div class="hero-actions">
+                {% if session.get('user_id') %}
+                <a href="{{ url_for('user_flights') }}" class="btn-primary">
+                    Book a flight
+                </a>
+                <a href="{{ url_for('my_bookings') }}" class="btn-secondary">
+                    My bookings
+                </a>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn-primary">
+                    Login to book
+                </a>
+                {% endif %}
+            </div>
+
             <div class="hero-image">
+                <!-- First image -->
                 <img src="{{ url_for('static', filename='image/aer-lingus.jpg') }}"
                      alt="Aer Lingus airplane">
+
+                <!-- Second image (will also sit in the full-width hero area) -->
                 <img src="{{ url_for('static', filename='image/download.jpg') }}" alt="Airplane">
             </div>
-        </section>
-
-        <!-- Single info card under hero -->
-        <section class="info-grid">
-            <article class="info-card">
-            </article>
         </section>
     </section>
 </main>

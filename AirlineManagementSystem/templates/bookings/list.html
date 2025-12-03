@@ -2,14 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>All Flights - Airline Management System</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <title>My Bookings</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="page">
 
-<!-- Top bar -->
 <header class="top-bar">
     <div class="top-bar-left">
         <div class="logo-circle">AMS</div>
@@ -20,9 +17,10 @@
     </div>
 
     <nav class="top-nav">
-        <!-- Admin/user nav -->
         {% if session.get('user_id') %}
+        <!-- User → Add a new flight -->
         <a href="{{ url_for('add_mongo') }}" class="user-role-link">User</a>
+
         <a href="{{ url_for('home') }}">Home</a>
         <span class="user-name">Hi, {{ session.get('user_name') }}</span>
         <a href="{{ url_for('logout') }}">Logout</a>
@@ -36,7 +34,7 @@
 
 <main class="layout-single">
     <section class="table-card">
-        <h1>All Flights</h1>
+        <h1>My bookings</h1>
 
         {% with messages = get_flashed_messages() %}
         {% if messages %}
@@ -53,36 +51,43 @@
                 <thead>
                 <tr>
                     <th>Flight ID</th>
-                    <th>Origin</th>
-                    <th>Destination</th>
+                    <th>Route</th>
                     <th>Date</th>
-                    <th>Time</th>
+                    <th>Passengers</th>
+                    <th>Class</th>
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
                 </thead>
                 <tbody>
-                {% for f in flights %}
+                {% for item in booking_details %}
+                {% set b = item.booking %}
+                {% set f = item.flight %}
                 <tr>
-                    <td>{{ f.flightID }}</td>
-                    <td>{{ f.origin }}</td>
-                    <td>{{ f.destination }}</td>
-                    <td>{{ f.date }}</td>
-                    <td>{{ f.time }}</td>
+                    <td>{{ b.flightID }}</td>
+                    <td>{{ f.origin }} → {{ f.destination }}</td>
+                    <td>{{ b.travel_date }}</td>
+                    <td>{{ b.num_passengers }}</td>
+                    <td>{{ b.cabin_class }}</td>
+                    <td>{{ b.status }}</td>
                     <td class="actions">
-                        <a href="{{ url_for('update_flight', flight_id=f.flightID) }}"
+                        <a href="{{ url_for('edit_booking', booking_id=b._id) }}"
                            class="btn-secondary btn-small">
                             Update
                         </a>
-                        <a href="{{ url_for('delete_flight', flight_id=f.flightID) }}"
-                           class="delete-link btn-small"
-                           onclick="return confirm('Delete this flight?');">
-                            Delete
-                        </a>
+                        <form action="{{ url_for('cancel_booking', booking_id=b._id) }}"
+                              method="post" style="display:inline;">
+                            <button type="submit"
+                                    class="delete-link btn-small"
+                                    onclick="return confirm('Delete this booking?');">
+                                Delete
+                            </button>
+                        </form>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" class="no-data">No flights found.</td>
+                    <td colspan="7">You have no bookings yet.</td>
                 </tr>
                 {% endfor %}
                 </tbody>
@@ -90,12 +95,17 @@
         </div>
 
         <div style="margin-top: 16px;">
-            <a href="{{ url_for('home') }}" class="btn-secondary">Back to home</a>
+            <a href="{{ url_for('home') }}" class="btn-secondary">
+                Back to home
+            </a>
+            {% if session.get('user_id') %}
+            <a href="{{ url_for('user_flights') }}" class="btn-primary" style="margin-left: 8px;">
+                Book a flight
+            </a>
+            {% endif %}
         </div>
     </section>
 </main>
 
-<footer class="footer">
-</footer>
 </body>
 </html>
