@@ -88,88 +88,91 @@ def login_required(f):
             flash("Please log in to continue.", "warning")
             return redirect(url_for("login", next=request.url))
         return f(*args, **kwargs)
+
     return wrapper
 
 
 # -----------------------------
-# EXISTING ROUTES
+# ROUTES
 # -----------------------------
 
 # Homepage
-@app.route('/')
+@app.route("/")
 def home():
-    return render_template('index.html')
+    # BLUE landing page with plane images + navbar
+    return render_template("index.html")
 
 
 # Add flight (MongoDB)
-@app.route('/add_mongo', methods=['GET', 'POST'])
+@app.route("/add_mongo", methods=["GET", "POST"])
 def add_mongo():
-    if request.method == 'POST':
-        flightID = request.form['flightID']
-        origin = request.form['origin']
-        destination = request.form['destination']
-        date = request.form['date']
-        time = request.form['time']
+    if request.method == "POST":
+        flightID = request.form["flightID"]
+        origin = request.form["origin"]
+        destination = request.form["destination"]
+        date = request.form["date"]
+        time = request.form["time"]
 
         # Simple validation
         if not flightID or not origin or not destination or not date or not time:
             flash("❌ All fields are required.")
-            return redirect('/add_mongo')
+            return redirect("/add_mongo")
 
         # Insert into MongoDB
-        mongo_collection.insert_one({
-            'flightID': flightID,
-            'origin': origin,
-            'destination': destination,
-            'date': date,
-            'time': time
-        })
+        mongo_collection.insert_one(
+            {
+                "flightID": flightID,
+                "origin": origin,
+                "destination": destination,
+                "date": date,
+                "time": time,
+            }
+        )
 
         flash("✅ Flight added successfully!")
-        return redirect('/flights_mongo')
+        return redirect("/flights_mongo")
 
-    return render_template('add_mongo.html')
+    return render_template("bookings/add_mongo.html")
 
 
 # View all flights from MongoDB (admin list)
-@app.route('/flights_mongo')
+@app.route("/flights_mongo")
 def flights_mongo():
     flights = list(mongo_collection.find())
-    return render_template('flights_mongo.html', flights=flights)
+    return render_template("bookings/flights_mongo.html", flights=flights)
 
 
 # Delete a flight
-@app.route('/delete/<flight_id>')
+@app.route("/delete/<flight_id>")
 def delete_flight(flight_id):
-    mongo_collection.delete_one({'flightID': flight_id})
+    mongo_collection.delete_one({"flightID": flight_id})
     flash(f"🗑️ Flight {flight_id} deleted.")
-    return redirect('/flights_mongo')
+    return redirect("/flights_mongo")
 
 
 # Update a flight
-@app.route('/update/<flight_id>', methods=['GET', 'POST'])
+@app.route("/update/<flight_id>", methods=["GET", "POST"])
 def update_flight(flight_id):
-    flight = mongo_collection.find_one({'flightID': flight_id})
+    flight = mongo_collection.find_one({"flightID": flight_id})
 
-    if request.method == 'POST':
+    if request.method == "POST":
         updated_data = {
-            'flightID': request.form['flightID'],
-            'origin': request.form['origin'],
-            'destination': request.form['destination'],
-            'date': request.form['date'],
-            'time': request.form['time']
+            "flightID": request.form["flightID"],
+            "origin": request.form["origin"],
+            "destination": request.form["destination"],
+            "date": request.form["date"],
+            "time": request.form["time"],
         }
-        mongo_collection.update_one({'flightID': flight_id}, {'$set': updated_data})
+        mongo_collection.update_one({"flightID": flight_id}, {"$set": updated_data})
         flash(f"✏️ Flight {flight_id} updated.")
-        return redirect('/flights_mongo')
+        return redirect("/flights_mongo")
 
-    return render_template('update_mongo.html', flight=flight)
+    return render_template("bookings/update_mongo.html", flight=flight)
 
 
 # -----------------------------
-# NEW: USER AUTHENTICATION
+# USER AUTHENTICATION
 # -----------------------------
-
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -185,7 +188,7 @@ def register():
             "name": name,
             "email": email,
             "password_hash": generate_password_hash(password),
-            "role": "user"
+            "role": "user",
         }
         result = users_collection.insert_one(user_doc)
 
@@ -196,7 +199,7 @@ def register():
         flash("Registration successful!", "success")
         return redirect(url_for("home"))
 
-    return render_template("register.html")
+    return render_template("bookings/register.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -217,7 +220,7 @@ def login():
         else:
             flash("Invalid email or password.", "danger")
 
-    return render_template("login.html")
+    return render_template("bookings/login.html")
 
 
 @app.route("/logout")
@@ -228,21 +231,19 @@ def logout():
 
 
 # -----------------------------
-# NEW: USER VIEW OF FLIGHTS
+# USER VIEW OF FLIGHTS
 # -----------------------------
-
 @app.route("/user/flights")
 @login_required
 def user_flights():
     """Flights list for normal users with Book button."""
     flights = list(mongo_collection.find())
-    return render_template("flights_user.html", flights=flights)
+    return render_template("bookings/flights_user.html", flights=flights)
 
 
 # -----------------------------
-# NEW: BOOKINGS (CRUD)
+# BOOKINGS (CRUD)
 # -----------------------------
-
 # Create booking
 @app.route("/book/<flight_id>", methods=["GET", "POST"])
 @login_required
@@ -265,14 +266,14 @@ def book_flight(flight_id):
 
         booking_doc = {
             "user_id": ObjectId(session["user_id"]),
-            "flightID": flight["flightID"],   # keep same key as in flights
-            "travel_date": travel_date,       # taken from flight info
+            "flightID": flight["flightID"],  # keep same key as in flights
+            "travel_date": travel_date,      # taken from flight info
             "num_passengers": num_passengers,
             "cabin_class": cabin_class,
             "passenger": {
                 "full_name": full_name,
                 "email": email,
-                "phone": phone
+                "phone": phone,
             },
             "status": "CONFIRMED",
             "created_at": datetime.utcnow(),
@@ -311,7 +312,8 @@ def my_bookings():
 @login_required
 def edit_booking(booking_id):
     booking = bookings_collection.find_one(
-        {"_id": ObjectId(booking_id), "user_id": ObjectId(session["user_id"])})
+        {"_id": ObjectId(booking_id), "user_id": ObjectId(session["user_id"])}
+    )
     if not booking:
         flash("Booking not found.", "danger")
         return redirect(url_for("my_bookings"))
@@ -343,7 +345,8 @@ def edit_booking(booking_id):
 def cancel_booking(booking_id):
     """Delete booking document completely."""
     bookings_collection.delete_one(
-        {"_id": ObjectId(booking_id), "user_id": ObjectId(session["user_id"])})
+        {"_id": ObjectId(booking_id), "user_id": ObjectId(session["user_id"])}
+    )
     flash("Booking deleted.", "info")
     return redirect(url_for("my_bookings"))
 

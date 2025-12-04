@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Available Flights - Airline Management System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="page">
+
+<header class="top-bar">
+    <div class="top-bar-left">
+        <div class="logo-circle">AMS</div>
+        <div class="brand-text">
+            <span class="brand-name">Airline Management System</span>
+            <span class="brand-subtitle">Flight information &amp; management</span>
+        </div>
+    </div>
+
+    <nav class="top-nav">
+        {% if session.get('user_id') %}
+        <!-- User → Add a new flight -->
+        <a href="{{ url_for('add_mongo') }}" class="user-role-link">User</a>
+
+        <a href="{{ url_for('home') }}">Home</a>
+        <span class="user-name">Hi, {{ session.get('user_name') }}</span>
+        <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('register') }}">Register</a>
+        {% endif %}
+    </nav>
+</header>
+
+<main class="layout-single">
+    <section class="table-card">
+        <h1>Available flights</h1>
+
+        <div class="table-wrapper">
+            <table class="flights-table">
+                <thead>
+                <tr>
+                    <th>Flight ID</th>
+                    <th>Origin</th>
+                    <th>Destination</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Book</th>
+                    <th>Actions</th>   <!-- NEW -->
+                </tr>
+                </thead>
+                <tbody>
+                {% for f in flights %}
+                <tr>
+                    <td>{{ f.flightID }}</td>
+                    <td>{{ f.origin }}</td>
+                    <td>{{ f.destination }}</td>
+                    <td>{{ f.date }}</td>
+                    <td>{{ f.time }}</td>
+
+                    <!-- Book button -->
+                    <td class="actions">
+                        <a href="{{ url_for('book_flight', flight_id=f.flightID) }}"
+                           class="btn-primary btn-small">
+                            Book
+                        </a>
+                    </td>
+
+                    <!-- NEW: Update + Delete buttons -->
+                    <td class="actions">
+                        <a href="{{ url_for('update_flight', flight_id=f.flightID) }}"
+                           class="btn-secondary btn-small">
+                            Update
+                        </a>
+                        <a href="{{ url_for('delete_flight', flight_id=f.flightID) }}"
+                           class="delete-link btn-small"
+                           onclick="return confirm('Delete this flight? This will remove it for all users.');">
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="no-data">No flights available.</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 16px;">
+            <a href="{{ url_for('home') }}" class="btn-secondary">Back to home</a>
+        </div>
+    </section>
+</main>
+
+</body>
+</html>

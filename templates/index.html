@@ -1,11 +1,82 @@
 <!DOCTYPE html>
-<html>
-<head><title>Airline Management System</title></head>
-<body>
-<h2>Welcome to Airline Management System</h2>
-<ul>
-    <li><a href="/add_mongo">Add Flight</a></li>
-    <li><a href="/flights_mongo">View Flights</a></li>
-</ul>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Airline Management System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Link to our stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="page">
+
+<!-- Top bar -->
+<header class="top-bar">
+    <div class="top-bar-left">
+        <div class="logo-circle">AMS</div>
+        <div class="brand-text">
+            <span class="brand-name">Airline Management System</span>
+            <span class="brand-subtitle">Flight information &amp; management</span>
+        </div>
+    </div>
+
+    <nav class="top-nav">
+        {% if session.get('user_id') %}
+        <!-- User goes to Add a new flight -->
+        <a href="{{ url_for('add_mongo') }}" class="user-role-link">User</a>
+
+        <a href="{{ url_for('home') }}">Home</a>
+        <span class="user-name">Hi, {{ session.get('user_name') }}</span>
+        <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('register') }}">Register</a>
+        {% endif %}
+    </nav>
+</header>
+
+<!-- Main layout: single column (no sidebar) -->
+<main class="layout-single">
+    <section class="content">
+        <h1>Flight information</h1>
+
+        <!-- Hero section with text + buttons + images -->
+        <section class="hero-card">
+            <p>
+                Search flights, book tickets, and manage your bookings in one place.
+            </p>
+
+            <div class="hero-actions">
+                {% if session.get('user_id') %}
+                <a href="{{ url_for('user_flights') }}" class="btn-primary">
+                    Book a flight
+                </a>
+                <a href="{{ url_for('my_bookings') }}" class="btn-secondary">
+                    My bookings
+                </a>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn-primary">
+                    Login to book
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="hero-image">
+                <!-- First image -->
+                <img src="{{ url_for('static', filename='image/aer-lingus.jpg') }}"
+                     alt="Aer Lingus airplane">
+
+                <!-- Second image (will also sit in the full-width hero area) -->
+                <img src="{{ url_for('static', filename='image/download.jpg') }}" alt="Airplane">
+            </div>
+        </section>
+    </section>
+</main>
+
+<!-- Footer -->
+<footer class="footer">
+    <p>Deployed via GitHub Actions CI/CD • Airline Management System</p>
+</footer>
 </body>
 </html>
