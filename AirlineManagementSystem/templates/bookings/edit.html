@@ -22,21 +22,38 @@
 
         <form method="post">
             <div class="form-group">
-                <label for="travel_date">Travel date</label>
-                <input id="travel_date" class="form-input" type="date"
-                       name="travel_date" value="{{ booking.travel_date }}" required>
+                <label for="travel_date" class="form-label">Travel date</label>
+                <input
+                        id="travel_date"
+                        class="form-input"
+                        type="date"
+                        name="travel_date"
+                        value="{{ booking.travel_date }}"
+                        required
+                >
             </div>
 
             <div class="form-group">
-                <label for="num_passengers">Number of passengers</label>
-                <input id="num_passengers" class="form-input" type="number"
-                       name="num_passengers" min="1"
-                       value="{{ booking.num_passengers }}" required>
+                <label for="num_passengers" class="form-label">Number of passengers</label>
+                <input
+                        id="num_passengers"
+                        class="form-input"
+                        type="number"
+                        name="num_passengers"
+                        min="1"
+                        value="{{ booking.num_passengers }}"
+                        required
+                >
             </div>
 
             <div class="form-group">
-                <label for="cabin_class">Class</label>
-                <select id="cabin_class" class="form-input" name="cabin_class" required>
+                <label for="cabin_class" class="form-label">Class</label>
+                <select
+                        id="cabin_class"
+                        class="form-input"
+                        name="cabin_class"
+                        required
+                >
                     <option value="Economy"  {% if booking.cabin_class == 'Economy' %}selected{% endif %}>Economy</option>
                     <option value="Premium"  {% if booking.cabin_class == 'Premium' %}selected{% endif %}>Premium Economy</option>
                     <option value="Business" {% if booking.cabin_class == 'Business' %}selected{% endif %}>Business</option>
