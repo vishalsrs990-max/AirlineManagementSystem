@@ -1,5 +1,4 @@
 import os
-import secrets
 import boto3
 
 from flask import (
@@ -12,21 +11,18 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime, timezone
 
-# ------------------------------------------------
-# Flask setup
-# ------------------------------------------------
 app = Flask(__name__)
 app.config["DEBUG"] = True
 
-# Secret key: NEVER hard-code a fixed string.
-# 1. Try to read from environment (production)
-# 2. If missing (local dev), generate a random key at runtime
-secret_key = os.environ.get("FLASK_SECRET_KEY")
-if not secret_key:
-    # Dev-only fallback – generated each time, not a constant
-    secret_key = secrets.token_hex(32)
-
-app.secret_key = secret_key
+# -------------------------------------------------------------------
+# Secret key – never hard-code real secrets in source control
+# -------------------------------------------------------------------
+SECRET_KEY = os.environ.get("FLASK_SECRET_KEY")
+if not SECRET_KEY:
+    # Dev-only fallback so the app still runs on your laptop / EC2.
+    # In production set FLASK_SECRET_KEY in the environment.
+    SECRET_KEY = "dev-only-secret"
+app.secret_key = SECRET_KEY
 
 # -----------------------------
 # MongoDB connection
@@ -44,10 +40,14 @@ bookings_collection = db["bookings"]
 # ------------------------------------------------
 # AWS SNS client for booking notifications
 # ------------------------------------------------
-SNS_REGION = "us-east-1"
-SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:533267158126:ams-bookings-topic"
+# Use environment variables instead of hard-coded region / topic ARN
+AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
+SNS_TOPIC_ARN = os.environ.get(
+    "SNS_TOPIC_ARN",
+    "arn:aws:sns:us-east-1:533267158126:ams-bookings-topic",
+)
 
-sns_client = boto3.client("sns", region_name=SNS_REGION)
+sns_client = boto3.client("sns", region_name=AWS_REGION)
 
 
 def notify_new_booking(booking: dict, flight: dict) -> None:
@@ -56,6 +56,7 @@ def notify_new_booking(booking: dict, flight: dict) -> None:
     All email subscribers to the topic will receive it.
     """
     subject = f"New booking for flight {flight['flightID']}"
+
     message_lines = [
         "A new booking has been created in Airline Management System.",
         "",
@@ -82,8 +83,8 @@ def notify_new_booking(booking: dict, flight: dict) -> None:
             Message=message_text,
         )
         print("SNS publish OK, message ID:", response.get("MessageId"))
-    except Exception as exc:  # pragma: no cover  (best-effort logging)
-        # Don't crash the app if SNS fails – just log it.
+    except Exception as exc:  # noqa: BLE001
+        # Do not crash the app if SNS fails – just log it.
         print("SNS publish error:", repr(exc))
 
 
@@ -104,11 +105,9 @@ def login_required(view_func):
 # -----------------------------
 # ROUTES
 # -----------------------------
-
-# Homepage
 @app.route("/")
 def home():
-    # BLUE landing page with plane images + navbar
+    """Blue landing page with plane images + navbar."""
     return render_template("index.html")
 
 
@@ -116,21 +115,21 @@ def home():
 @app.route("/add_mongo", methods=["GET", "POST"])
 def add_mongo():
     if request.method == "POST":
-        flight_id = request.form["flightID"].strip()
-        origin = request.form["origin"].strip()
-        destination = request.form["destination"].strip()
-        date = request.form["date"].strip()
-        time = request.form["time"].strip()
+        flightID = request.form["flightID"]
+        origin = request.form["origin"]
+        destination = request.form["destination"]
+        date = request.form["date"]
+        time = request.form["time"]
 
         # Simple validation
-        if not all([flight_id, origin, destination, date, time]):
+        if not all([flightID, origin, destination, date, time]):
             flash("❌ All fields are required.")
-            return redirect("/add_mongo")
+            return redirect(url_for("add_mongo"))
 
         # Insert into MongoDB
         mongo_collection.insert_one(
             {
-                "flightID": flight_id,
+                "flightID": flightID,
                 "origin": origin,
                 "destination": destination,
                 "date": date,
@@ -139,7 +138,8 @@ def add_mongo():
         )
 
         flash("✅ Flight added successfully!")
-        return redirect("/flights_mongo")
+        # use url_for instead of repeated "/flights_mongo" literal
+        return redirect(url_for("flights_mongo"))
 
     return render_template("bookings/add_mongo.html")
 
@@ -156,7 +156,7 @@ def flights_mongo():
 def delete_flight(flight_id):
     mongo_collection.delete_one({"flightID": flight_id})
     flash(f"🗑️ Flight {flight_id} deleted.")
-    return redirect("/flights_mongo")
+    return redirect(url_for("flights_mongo"))
 
 
 # Update a flight
@@ -166,15 +166,15 @@ def update_flight(flight_id):
 
     if request.method == "POST":
         updated_data = {
-            "flightID": request.form["flightID"].strip(),
-            "origin": request.form["origin"].strip(),
-            "destination": request.form["destination"].strip(),
-            "date": request.form["date"].strip(),
-            "time": request.form["time"].strip(),
+            "flightID": request.form["flightID"],
+            "origin": request.form["origin"],
+            "destination": request.form["destination"],
+            "date": request.form["date"],
+            "time": request.form["time"],
         }
         mongo_collection.update_one({"flightID": flight_id}, {"$set": updated_data})
         flash(f"✏️ Flight {flight_id} updated.")
-        return redirect("/flights_mongo")
+        return redirect(url_for("flights_mongo"))
 
     return render_template("bookings/update_mongo.html", flight=flight)
 
@@ -225,8 +225,12 @@ def login():
 
             flash("Logged in successfully.", "success")
             next_url = request.args.get("next")
-            return redirect(next_url or url_for("home"))
 
+            # 🔒 Validate "next" to avoid open redirects
+            if not next_url or not next_url.startswith("/"):
+                next_url = url_for("home")
+
+            return redirect(next_url)
         flash("Invalid email or password.", "danger")
 
     return render_template("bookings/login.html")
@@ -256,7 +260,7 @@ def user_flights():
 @app.route("/book/<flight_id>", methods=["GET", "POST"])
 @login_required
 def book_flight(flight_id):
-    """Create a booking for a given flight."""
+    """Create a booking for the current user."""
     flight = mongo_collection.find_one({"flightID": flight_id})
     if not flight:
         flash("Flight not found.", "danger")
@@ -283,7 +287,7 @@ def book_flight(flight_id):
                 "phone": phone,
             },
             "status": "CONFIRMED",
-            # timezone-aware datetime instead of datetime.utcnow()
+            # Use timezone-aware timestamp instead of datetime.utcnow()
             "created_at": datetime.now(timezone.utc),
         }
 
@@ -348,7 +352,7 @@ def edit_booking(booking_id):
 @app.route("/booking/<booking_id>/cancel", methods=["POST"])
 @login_required
 def cancel_booking(booking_id):
-    """Delete booking document completely."""
+    """Delete a booking document completely."""
     bookings_collection.delete_one(
         {"_id": ObjectId(booking_id), "user_id": ObjectId(session["user_id"])}
     )
@@ -356,8 +360,5 @@ def cancel_booking(booking_id):
     return redirect(url_for("my_bookings"))
 
 
-# -----------------------------
-# MAIN
-# -----------------------------
-if __name__ == "__main__":  # pragma: no cover
-    app.run(host="0.0.0.0", port=5000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
