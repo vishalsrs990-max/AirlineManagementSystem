@@ -1,5 +1,7 @@
-import boto3
+import os
+from urllib.parse import urlparse, urljoin
 
+import boto3
 from flask import (
     Flask, render_template, request, redirect,
     flash, session, url_for
@@ -11,22 +13,29 @@ from functools import wraps
 from datetime import datetime
 
 app = Flask(__name__)
-app.config['DEBUG'] = True
-app.secret_key = 'your_secret_key_here'  # Replace with a secure random string
+app.config["DEBUG"] = True
+
+# ------------------------------------------------
+# Secret key: read from environment in production
+# ------------------------------------------------
+SECRET_KEY = os.environ.get("FLASK_SECRET_KEY")
+if not SECRET_KEY:
+    # Dev-only fallback – do NOT use in production
+    SECRET_KEY = "dev-only-secret"
+app.secret_key = SECRET_KEY
 
 # -----------------------------
 # MongoDB connection
 # -----------------------------
-client = MongoClient('mongodb://localhost:27017/')
-db = client['flights_db']
+client = MongoClient("mongodb://localhost:27017/")
+db = client["flights_db"]
 
 # Existing collection for flights (DO NOT CHANGE)
-mongo_collection = db['flights']
+mongo_collection = db["flights"]
 
 # New collections
-users_collection = db['users']
-bookings_collection = db['bookings']
-
+users_collection = db["users"]
+bookings_collection = db["bookings"]
 
 # ------------------------------------------------
 # AWS SNS client for booking notifications
@@ -62,7 +71,7 @@ def notify_new_booking(booking: dict, flight: dict):
         f"Class: {booking['cabin_class']}",
         f"Status: {booking['status']}",
         "",
-        "AMS – DevOps project notification via Amazon SNS."
+        "AMS – DevOps project notification via Amazon SNS.",
     ]
     message_text = "\n".join(message_lines)
 
@@ -79,7 +88,7 @@ def notify_new_booking(booking: dict, flight: dict):
 
 
 # -----------------------------
-# Helper: login_required decorator
+# Helpers
 # -----------------------------
 def login_required(f):
     @wraps(f)
@@ -90,6 +99,19 @@ def login_required(f):
         return f(*args, **kwargs)
 
     return wrapper
+
+
+def is_safe_url(target: str) -> bool:
+    """
+    Ensure the redirect target is same-host and http/https.
+    Prevents open redirect vulnerabilities when using ?next=...
+    """
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return (
+            test_url.scheme in ("http", "https")
+            and ref_url.netloc == test_url.netloc
+    )
 
 
 # -----------------------------
@@ -216,7 +238,11 @@ def login():
 
             flash("Logged in successfully.", "success")
             next_url = request.args.get("next")
-            return redirect(next_url or url_for("home"))
+
+            # secure redirect – only allow same-host URLs
+            if next_url and is_safe_url(next_url):
+                return redirect(next_url)
+            return redirect(url_for("home"))
         else:
             flash("Invalid email or password.", "danger")
 

@@ -4,3 +4,6 @@ IntelliJ IDEA Community Edition 2025.2.4/
 *.exe
 *.zip
 *.bin
+# Never commit private keys
+*.pem
+*.key
