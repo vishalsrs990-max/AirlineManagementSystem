@@ -1,25 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Update Flight</title>
 </head>
 <body>
 <h2>Update Flight {{ flight.flightID }}</h2>
+
 <form method="POST">
-    <label>Flight ID:</label>
-    <input type="text" name="flightID" value="{{ flight.flightID }}" required><br>
+    <label for="flightID">Flight ID:</label>
+    <input
+            id="flightID"
+            type="text"
+            name="flightID"
+            value="{{ flight.flightID }}"
+            required
+    ><br>
 
-    <label>Origin:</label>
-    <input type="text" name="origin" value="{{ flight.origin }}" required><br>
+    <label for="origin">Origin:</label>
+    <input
+            id="origin"
+            type="text"
+            name="origin"
+            value="{{ flight.origin }}"
+            required
+    ><br>
 
-    <label>Destination:</label>
-    <input type="text" name="destination" value="{{ flight.destination }}" required><br>
+    <label for="destination">Destination:</label>
+    <input
+            id="destination"
+            type="text"
+            name="destination"
+            value="{{ flight.destination }}"
+            required
+    ><br>
 
-    <label>Date:</label>
-    <input type="date" name="date" value="{{ flight.date }}" required><br>
+    <label for="date">Date:</label>
+    <input
+            id="date"
+            type="date"
+            name="date"
+            value="{{ flight.date }}"
+            required
+    ><br>
 
-    <label>Time:</label>
-    <input type="time" name="time" value="{{ flight.time }}" required><br>
+    <label for="time">Time:</label>
+    <input
+            id="time"
+            type="time"
+            name="time"
+            value="{{ flight.time }}"
+            required
+    ><br>
 
     <button type="submit">Update Flight</button>
 </form>
