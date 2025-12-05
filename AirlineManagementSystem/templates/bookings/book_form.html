@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,28 +25,34 @@
             <h3>Passenger details</h3>
 
             <div class="form-group">
-                <label>Full name</label>
-                <input class="form-input" name="full_name" required>
+                <label for="full_name">Full name</label>
+                <input id="full_name" class="form-input" name="full_name" required>
             </div>
 
             <div class="form-group">
-                <label>Email</label>
-                <input class="form-input" type="email" name="email" required>
+                <label for="email">Email</label>
+                <input id="email" class="form-input" type="email" name="email" required>
             </div>
 
             <div class="form-group">
-                <label>Phone</label>
-                <input class="form-input" name="phone" required>
+                <label for="phone">Phone</label>
+                <input id="phone" class="form-input" name="phone" required>
             </div>
 
             <div class="form-group">
-                <label>Number of passengers</label>
-                <input class="form-input" type="number" name="num_passengers" min="1" value="1" required>
+                <label for="num_passengers">Number of passengers</label>
+                <input id="num_passengers"
+                       class="form-input"
+                       type="number"
+                       name="num_passengers"
+                       min="1"
+                       value="1"
+                       required>
             </div>
 
             <div class="form-group">
-                <label>Class</label>
-                <select class="form-input" name="cabin_class" required>
+                <label for="cabin_class">Class</label>
+                <select id="cabin_class" class="form-input" name="cabin_class" required>
                     <option value="Economy">Economy</option>
                     <option value="Premium">Premium Economy</option>
                     <option value="Business">Business</option>
