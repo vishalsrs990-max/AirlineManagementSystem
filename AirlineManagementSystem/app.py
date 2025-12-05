@@ -1,7 +1,6 @@
 import os
 from datetime import datetime, timezone
 from functools import wraps
-from urllib.parse import urlparse  # NEW: for safe redirect check
 
 import boto3
 from bson.objectid import ObjectId
@@ -105,27 +104,11 @@ def login_required(f):
     def wrapper(*args, **kwargs):
         if "user_id" not in session:
             flash("Please log in to continue.", "warning")
+            # Note: we still pass ?next= but we no longer use it in redirect
             return redirect(url_for("login", next=request.url))
         return f(*args, **kwargs)
 
     return wrapper
-
-
-# -----------------------------
-# Helper: safe redirect / open-redirect protection
-# -----------------------------
-def is_safe_next(next_url: str) -> bool:
-    """
-    Allow only relative URLs (no scheme / domain) in ?next=.
-    Prevents open redirect attacks.
-    """
-    if not next_url:
-        return False
-
-    parsed = urlparse(next_url)
-
-    # Only allow URLs like "/user/flights" – no external domains.
-    return parsed.scheme == "" and parsed.netloc == ""
 
 
 # -----------------------------
@@ -253,14 +236,10 @@ def login():
 
             flash("Logged in successfully.", "success")
 
-            # ---- secure handling of ?next= URL (fixes Sonar open-redirect) ----
-            raw_next = request.args.get("next")
-            if is_safe_next(raw_next):
-                target = raw_next
-            else:
-                target = url_for("home")
-            return redirect(target)
-            # -----------------------------------------------------------------
+            # Security: after successful login, redirect to a fixed internal page.
+            # We intentionally ignore any user-controlled ?next= parameter here
+            # to avoid open-redirect vulnerabilities.
+            return redirect(url_for("home"))
 
         flash("Invalid email or password.", "danger")
 
