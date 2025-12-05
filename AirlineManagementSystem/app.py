@@ -1,15 +1,21 @@
 import os
-import boto3
+from datetime import datetime, timezone
+from functools import wraps
+from urllib.parse import urlparse  # NEW: for safe redirect check
 
+import boto3
+from bson.objectid import ObjectId
 from flask import (
-    Flask, render_template, request, redirect,
-    flash, session, url_for
+    Flask,
+    render_template,
+    request,
+    redirect,
+    flash,
+    session,
+    url_for,
 )
 from pymongo import MongoClient
-from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
-from functools import wraps
-from datetime import datetime, timezone
 
 # ------------------------------------------------
 # Flask setup
@@ -22,7 +28,7 @@ app.config["DEBUG"] = os.getenv("FLASK_DEBUG", "1") == "1"
 # ------------------------------------------------
 # Secret key (NO HARD-CODED VALUE)
 # ------------------------------------------------
-# SonarCloud rule python:S6779 – don't hard-code Flask secret keys
+# SonarCloud rule python:S6779 – don't hard-code Flask secret keys.
 # Read from environment; use a dev-only fallback for local work.
 app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", "dev-only-secret")
 
@@ -45,7 +51,7 @@ bookings_collection = db["bookings"]
 # Use environment or default region (no hard-coded magic)
 SNS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 
-# SNS topic ARN (can also be moved to env if you want)
+# SNS topic ARN (can also be moved fully to env if you want)
 SNS_TOPIC_ARN = os.environ.get(
     "SNS_TOPIC_ARN",
     "arn:aws:sns:us-east-1:533267158126:ams-bookings-topic",
@@ -106,6 +112,23 @@ def login_required(f):
 
 
 # -----------------------------
+# Helper: safe redirect / open-redirect protection
+# -----------------------------
+def is_safe_next(next_url: str) -> bool:
+    """
+    Allow only relative URLs (no scheme / domain) in ?next=.
+    Prevents open redirect attacks.
+    """
+    if not next_url:
+        return False
+
+    parsed = urlparse(next_url)
+
+    # Only allow URLs like "/user/flights" – no external domains.
+    return parsed.scheme == "" and parsed.netloc == ""
+
+
+# -----------------------------
 # ROUTES
 # -----------------------------
 
@@ -130,7 +153,7 @@ def add_mongo():
         # Simple validation
         if not all([flight_id, origin, destination, date, time]):
             flash("❌ All fields are required.")
-            return redirect("/add_mongo")
+            return redirect(url_for("add_mongo"))
 
         # Insert into MongoDB
         mongo_collection.insert_one(
@@ -144,7 +167,7 @@ def add_mongo():
         )
 
         flash("✅ Flight added successfully!")
-        return redirect("/flights_mongo")
+        return redirect(url_for("flights_mongo"))
 
     return render_template("bookings/add_mongo.html")
 
@@ -161,7 +184,7 @@ def flights_mongo():
 def delete_flight(flight_id):
     mongo_collection.delete_one({"flightID": flight_id})
     flash(f"🗑️ Flight {flight_id} deleted.")
-    return redirect("/flights_mongo")
+    return redirect(url_for("flights_mongo"))
 
 
 # Update a flight
@@ -179,7 +202,7 @@ def update_flight(flight_id):
         }
         mongo_collection.update_one({"flightID": flight_id}, {"$set": updated_data})
         flash(f"✏️ Flight {flight_id} updated.")
-        return redirect("/flights_mongo")
+        return redirect(url_for("flights_mongo"))
 
     return render_template("bookings/update_mongo.html", flight=flight)
 
@@ -229,8 +252,15 @@ def login():
             session["user_role"] = user.get("role", "user")
 
             flash("Logged in successfully.", "success")
-            next_url = request.args.get("next")
-            return redirect(next_url or url_for("home"))
+
+            # ---- secure handling of ?next= URL (fixes Sonar open-redirect) ----
+            raw_next = request.args.get("next")
+            if is_safe_next(raw_next):
+                target = raw_next
+            else:
+                target = url_for("home")
+            return redirect(target)
+            # -----------------------------------------------------------------
 
         flash("Invalid email or password.", "danger")
 
