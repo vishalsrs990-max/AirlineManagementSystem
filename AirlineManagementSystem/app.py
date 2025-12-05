@@ -11,26 +11,28 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime, timezone
 
+# ------------------------------------------------
+# Flask setup
+# ------------------------------------------------
 app = Flask(__name__)
 app.config["DEBUG"] = True
 
-# -------------------------------------------------------------------
-# Secret key – never hard-code real secrets in source control
-# -------------------------------------------------------------------
-SECRET_KEY = os.environ.get("FLASK_SECRET_KEY")
-if not SECRET_KEY:
-    # Dev-only fallback so the app still runs on your laptop / EC2.
-    # In production set FLASK_SECRET_KEY in the environment.
-    SECRET_KEY = "dev-only-secret"
-app.secret_key = SECRET_KEY
+# Secret key: read from environment in production.
+# No hard-coded secret in source code (fixes Sonar "don't disclose Flask keys").
+secret_key = os.environ.get("FLASK_SECRET_KEY")
+if not secret_key:
+    # Dev-only fallback – generates a random key every time.
+    # This is OK for local testing, but in production you MUST set FLASK_SECRET_KEY.
+    secret_key = os.urandom(32)
+app.secret_key = secret_key
 
-# -----------------------------
+# ------------------------------------------------
 # MongoDB connection
-# -----------------------------
+# ------------------------------------------------
 client = MongoClient("mongodb://localhost:27017/")
 db = client["flights_db"]
 
-# Existing collection for flights (DO NOT CHANGE)
+# Existing collection for flights (DO NOT CHANGE COLLECTION NAME)
 mongo_collection = db["flights"]
 
 # New collections
@@ -38,16 +40,22 @@ users_collection = db["users"]
 bookings_collection = db["bookings"]
 
 # ------------------------------------------------
+# Constants for routes (remove duplicated string literals)
+# ------------------------------------------------
+FLIGHTS_MONGO_ROUTE = "/flights_mongo"
+
+# ------------------------------------------------
 # AWS SNS client for booking notifications
 # ------------------------------------------------
-# Use environment variables instead of hard-coded region / topic ARN
-AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
+# Region and credentials come from environment / instance metadata.
+# We do NOT hard-code the region string here (fixes Sonar hardcoded region).
+sns_client = boto3.client("sns")
+
+# Topic ARN is read from env if available, otherwise falls back to your current topic.
 SNS_TOPIC_ARN = os.environ.get(
     "SNS_TOPIC_ARN",
     "arn:aws:sns:us-east-1:533267158126:ams-bookings-topic",
 )
-
-sns_client = boto3.client("sns", region_name=AWS_REGION)
 
 
 def notify_new_booking(booking: dict, flight: dict) -> None:
@@ -56,7 +64,6 @@ def notify_new_booking(booking: dict, flight: dict) -> None:
     All email subscribers to the topic will receive it.
     """
     subject = f"New booking for flight {flight['flightID']}"
-
     message_lines = [
         "A new booking has been created in Airline Management System.",
         "",
@@ -83,14 +90,14 @@ def notify_new_booking(booking: dict, flight: dict) -> None:
             Message=message_text,
         )
         print("SNS publish OK, message ID:", response.get("MessageId"))
-    except Exception as exc:  # noqa: BLE001
-        # Do not crash the app if SNS fails – just log it.
+    except Exception as exc:  # pragma: no cover - log only
+        # Don't crash the app if SNS fails – just log it.
         print("SNS publish error:", repr(exc))
 
 
-# -----------------------------
+# ------------------------------------------------
 # Helper: login_required decorator
-# -----------------------------
+# ------------------------------------------------
 def login_required(view_func):
     @wraps(view_func)
     def wrapper(*args, **kwargs):
@@ -102,34 +109,40 @@ def login_required(view_func):
     return wrapper
 
 
-# -----------------------------
-# ROUTES
-# -----------------------------
+# ------------------------------------------------
+# ROUTES – homepage
+# ------------------------------------------------
 @app.route("/")
 def home():
-    """Blue landing page with plane images + navbar."""
+    # BLUE landing page with plane images + navbar
     return render_template("index.html")
 
 
-# Add flight (MongoDB)
+# ------------------------------------------------
+# Flights – Admin CRUD
+# ------------------------------------------------
 @app.route("/add_mongo", methods=["GET", "POST"])
 def add_mongo():
+    """
+    Admin: add a flight into the MongoDB 'flights' collection.
+    """
     if request.method == "POST":
-        flightID = request.form["flightID"]
+        # local variable renamed to snake_case for Sonar rule
+        flight_id = request.form["flightID"]
         origin = request.form["origin"]
         destination = request.form["destination"]
         date = request.form["date"]
         time = request.form["time"]
 
         # Simple validation
-        if not all([flightID, origin, destination, date, time]):
+        if not flight_id or not origin or not destination or not date or not time:
             flash("❌ All fields are required.")
-            return redirect(url_for("add_mongo"))
+            return redirect("/add_mongo")
 
-        # Insert into MongoDB
+        # Insert into MongoDB – keep DB field name 'flightID' unchanged
         mongo_collection.insert_one(
             {
-                "flightID": flightID,
+                "flightID": flight_id,
                 "origin": origin,
                 "destination": destination,
                 "date": date,
@@ -138,34 +151,40 @@ def add_mongo():
         )
 
         flash("✅ Flight added successfully!")
-        # use url_for instead of repeated "/flights_mongo" literal
-        return redirect(url_for("flights_mongo"))
+        return redirect(FLIGHTS_MONGO_ROUTE)
 
     return render_template("bookings/add_mongo.html")
 
 
-# View all flights from MongoDB (admin list)
-@app.route("/flights_mongo")
+@app.route(FLIGHTS_MONGO_ROUTE)
 def flights_mongo():
+    """
+    Admin: list all flights from MongoDB.
+    """
     flights = list(mongo_collection.find())
     return render_template("bookings/flights_mongo.html", flights=flights)
 
 
-# Delete a flight
 @app.route("/delete/<flight_id>")
 def delete_flight(flight_id):
+    """
+    Admin: delete a flight by flightID.
+    """
     mongo_collection.delete_one({"flightID": flight_id})
     flash(f"🗑️ Flight {flight_id} deleted.")
-    return redirect(url_for("flights_mongo"))
+    return redirect(FLIGHTS_MONGO_ROUTE)
 
 
-# Update a flight
 @app.route("/update/<flight_id>", methods=["GET", "POST"])
 def update_flight(flight_id):
+    """
+    Admin: update a flight document.
+    """
     flight = mongo_collection.find_one({"flightID": flight_id})
 
     if request.method == "POST":
         updated_data = {
+            # again, local variable is not named flightID – only the DB field is
             "flightID": request.form["flightID"],
             "origin": request.form["origin"],
             "destination": request.form["destination"],
@@ -174,14 +193,14 @@ def update_flight(flight_id):
         }
         mongo_collection.update_one({"flightID": flight_id}, {"$set": updated_data})
         flash(f"✏️ Flight {flight_id} updated.")
-        return redirect(url_for("flights_mongo"))
+        return redirect(FLIGHTS_MONGO_ROUTE)
 
     return render_template("bookings/update_mongo.html", flight=flight)
 
 
-# -----------------------------
+# ------------------------------------------------
 # USER AUTHENTICATION
-# -----------------------------
+# ------------------------------------------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -211,6 +230,16 @@ def register():
     return render_template("bookings/register.html")
 
 
+def _is_safe_next_url(next_url: str) -> bool:
+    """
+    Very small helper to ensure we don't open redirect vulnerabilities.
+    Only allow relative URLs inside this app.
+    """
+    if not next_url:
+        return False
+    return next_url.startswith("/") and not next_url.startswith("//")
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -225,12 +254,10 @@ def login():
 
             flash("Logged in successfully.", "success")
             next_url = request.args.get("next")
+            if _is_safe_next_url(next_url):
+                return redirect(next_url)
+            return redirect(url_for("home"))
 
-            # 🔒 Validate "next" to avoid open redirects
-            if not next_url or not next_url.startswith("/"):
-                next_url = url_for("home")
-
-            return redirect(next_url)
         flash("Invalid email or password.", "danger")
 
     return render_template("bookings/login.html")
@@ -243,9 +270,9 @@ def logout():
     return redirect(url_for("home"))
 
 
-# -----------------------------
+# ------------------------------------------------
 # USER VIEW OF FLIGHTS
-# -----------------------------
+# ------------------------------------------------
 @app.route("/user/flights")
 @login_required
 def user_flights():
@@ -254,13 +281,15 @@ def user_flights():
     return render_template("bookings/flights_user.html", flights=flights)
 
 
-# -----------------------------
+# ------------------------------------------------
 # BOOKINGS (CRUD)
-# -----------------------------
+# ------------------------------------------------
 @app.route("/book/<flight_id>", methods=["GET", "POST"])
 @login_required
 def book_flight(flight_id):
-    """Create a booking for the current user."""
+    """
+    Create a booking for the given flight.
+    """
     flight = mongo_collection.find_one({"flightID": flight_id})
     if not flight:
         flash("Flight not found.", "danger")
@@ -271,13 +300,14 @@ def book_flight(flight_id):
         email = request.form["email"].strip()
         phone = request.form["phone"].strip()
         num_passengers = int(request.form["num_passengers"])
-        cabin_class = request.form["cabin_class"]
+        cabin_class = request.form["cabin_class"]  # Economy / Premium / Business
 
+        # Use the flight's date as travel_date (no separate input)
         travel_date = flight.get("date")
 
         booking_doc = {
             "user_id": ObjectId(session["user_id"]),
-            "flightID": flight["flightID"],
+            "flightID": flight["flightID"],  # keep same key as in flights
             "travel_date": travel_date,
             "num_passengers": num_passengers,
             "cabin_class": cabin_class,
@@ -287,13 +317,16 @@ def book_flight(flight_id):
                 "phone": phone,
             },
             "status": "CONFIRMED",
-            # Use timezone-aware timestamp instead of datetime.utcnow()
+            # use timezone-aware datetime instead of datetime.utcnow()
+            # (fixes Sonar datetime pitfall rule)
             "created_at": datetime.now(timezone.utc),
         }
 
+        # Insert into MongoDB
         result = bookings_collection.insert_one(booking_doc)
-        booking_doc["_id"] = result.inserted_id
+        booking_doc["_id"] = result.inserted_id  # convenience only
 
+        # 🔔 Send SNS notification
         notify_new_booking(booking_doc, flight)
 
         flash("Booking created successfully! Notification sent via SNS.", "success")
@@ -305,7 +338,9 @@ def book_flight(flight_id):
 @app.route("/my-bookings")
 @login_required
 def my_bookings():
-    """List bookings for the logged-in user."""
+    """
+    Show bookings for the logged-in user.
+    """
     user_id = ObjectId(session["user_id"])
     bookings = list(bookings_collection.find({"user_id": user_id}))
 
@@ -320,7 +355,9 @@ def my_bookings():
 @app.route("/booking/<booking_id>/edit", methods=["GET", "POST"])
 @login_required
 def edit_booking(booking_id):
-    """Edit an existing booking."""
+    """
+    Edit an existing booking.
+    """
     booking = bookings_collection.find_one(
         {"_id": ObjectId(booking_id), "user_id": ObjectId(session["user_id"])}
     )
@@ -352,7 +389,9 @@ def edit_booking(booking_id):
 @app.route("/booking/<booking_id>/cancel", methods=["POST"])
 @login_required
 def cancel_booking(booking_id):
-    """Delete a booking document completely."""
+    """
+    Delete booking document completely.
+    """
     bookings_collection.delete_one(
         {"_id": ObjectId(booking_id), "user_id": ObjectId(session["user_id"])}
     )
@@ -360,5 +399,9 @@ def cancel_booking(booking_id):
     return redirect(url_for("my_bookings"))
 
 
+# ------------------------------------------------
+# MAIN
+# ------------------------------------------------
 if __name__ == "__main__":
+    # For local dev only – on EC2 / gunicorn you won't use this.
     app.run(host="0.0.0.0", port=5000, debug=True)
