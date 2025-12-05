@@ -1,36 +1,45 @@
 import os
+from datetime import datetime
+from functools import wraps
 from urllib.parse import urlparse, urljoin
 
 import boto3
+from bson.objectid import ObjectId
 from flask import (
-    Flask, render_template, request, redirect,
-    flash, session, url_for
+    Flask,
+    render_template,
+    request,
+    redirect,
+    flash,
+    session,
+    url_for,
 )
 from pymongo import MongoClient
-from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
-from functools import wraps
-from datetime import datetime
 
+# ------------------------------------------------
+# Flask setup
+# ------------------------------------------------
 app = Flask(__name__)
 app.config["DEBUG"] = True
 
-# ------------------------------------------------
-# Secret key: read from environment in production
-# ------------------------------------------------
+# Secret key MUST come from environment (no hard-coded secrets)
 SECRET_KEY = os.environ.get("FLASK_SECRET_KEY")
 if not SECRET_KEY:
-    # Dev-only fallback – do NOT use in production
-    SECRET_KEY = "dev-only-secret"
+    raise RuntimeError(
+        "FLASK_SECRET_KEY environment variable is not set. "
+        "Set it before starting the Flask app."
+    )
+
 app.secret_key = SECRET_KEY
 
-# -----------------------------
+# ------------------------------------------------
 # MongoDB connection
-# -----------------------------
+# ------------------------------------------------
 client = MongoClient("mongodb://localhost:27017/")
 db = client["flights_db"]
 
-# Existing collection for flights (DO NOT CHANGE)
+# Existing collection for flights
 mongo_collection = db["flights"]
 
 # New collections
@@ -40,17 +49,17 @@ bookings_collection = db["bookings"]
 # ------------------------------------------------
 # AWS SNS client for booking notifications
 # ------------------------------------------------
-# ⚠️ make sure this region matches the region where you created the SNS topic
-SNS_REGION = "us-east-1"
-
-# ⚠️ use the TOPIC ARN (no random GUID at the end)
-# Example: arn:aws:sns:us-east-1:533267158126:ams-bookings-topic
-SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:533267158126:ams-bookings-topic"
+# Region & topic ARN read from environment (safe default for assignment)
+SNS_REGION = os.environ.get("AWS_REGION", "us-east-1")
+SNS_TOPIC_ARN = os.environ.get(
+    "SNS_TOPIC_ARN",
+    "arn:aws:sns:us-east-1:533267158126:ams-bookings-topic",
+)
 
 sns_client = boto3.client("sns", region_name=SNS_REGION)
 
 
-def notify_new_booking(booking: dict, flight: dict):
+def notify_new_booking(booking: dict, flight: dict) -> None:
     """
     Publish a 'new booking' notification to SNS.
     All email subscribers to the topic will receive it.
@@ -87,9 +96,9 @@ def notify_new_booking(booking: dict, flight: dict):
         print("SNS publish error:", repr(e))
 
 
-# -----------------------------
+# ------------------------------------------------
 # Helpers
-# -----------------------------
+# ------------------------------------------------
 def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -101,49 +110,57 @@ def login_required(f):
     return wrapper
 
 
-def is_safe_url(target: str) -> bool:
+def _is_safe_next_url(target: str) -> bool:
     """
-    Ensure the redirect target is same-host and http/https.
-    Prevents open redirect vulnerabilities when using ?next=...
+    Ensure the 'next' URL is a local URL on this server.
+    This avoids open redirect vulnerabilities.
     """
-    ref_url = urlparse(request.host_url)
-    test_url = urlparse(urljoin(request.host_url, target))
+    if not target:
+        return False
+
+    host_url = request.host_url
+    ref_url = urlparse(host_url)
+    test_url = urlparse(urljoin(host_url, target))
+
     return (
             test_url.scheme in ("http", "https")
             and ref_url.netloc == test_url.netloc
     )
 
 
-# -----------------------------
+# ------------------------------------------------
 # ROUTES
-# -----------------------------
+# ------------------------------------------------
 
-# Homepage
+# Homepage (blue Aer Lingus UI)
 @app.route("/")
 def home():
-    # BLUE landing page with plane images + navbar
+    # main landing page with plane images + navbar
     return render_template("index.html")
 
 
-# Add flight (MongoDB)
+# -----------------------------
+# Flights CRUD (MongoDB)
+# -----------------------------
 @app.route("/add_mongo", methods=["GET", "POST"])
 def add_mongo():
     if request.method == "POST":
-        flightID = request.form["flightID"]
+        # form field name is 'flightID', Python variable uses snake_case
+        flight_id = request.form["flightID"]
         origin = request.form["origin"]
         destination = request.form["destination"]
         date = request.form["date"]
         time = request.form["time"]
 
         # Simple validation
-        if not flightID or not origin or not destination or not date or not time:
+        if not flight_id or not origin or not destination or not date or not time:
             flash("❌ All fields are required.")
-            return redirect("/add_mongo")
+            return redirect(url_for("add_mongo"))
 
-        # Insert into MongoDB
+        # Insert into MongoDB – document field remains 'flightID'
         mongo_collection.insert_one(
             {
-                "flightID": flightID,
+                "flightID": flight_id,
                 "origin": origin,
                 "destination": destination,
                 "date": date,
@@ -152,27 +169,24 @@ def add_mongo():
         )
 
         flash("✅ Flight added successfully!")
-        return redirect("/flights_mongo")
+        return redirect(url_for("flights_mongo"))
 
     return render_template("bookings/add_mongo.html")
 
 
-# View all flights from MongoDB (admin list)
 @app.route("/flights_mongo")
 def flights_mongo():
     flights = list(mongo_collection.find())
     return render_template("bookings/flights_mongo.html", flights=flights)
 
 
-# Delete a flight
 @app.route("/delete/<flight_id>")
 def delete_flight(flight_id):
     mongo_collection.delete_one({"flightID": flight_id})
     flash(f"🗑️ Flight {flight_id} deleted.")
-    return redirect("/flights_mongo")
+    return redirect(url_for("flights_mongo"))
 
 
-# Update a flight
 @app.route("/update/<flight_id>", methods=["GET", "POST"])
 def update_flight(flight_id):
     flight = mongo_collection.find_one({"flightID": flight_id})
@@ -187,7 +201,7 @@ def update_flight(flight_id):
         }
         mongo_collection.update_one({"flightID": flight_id}, {"$set": updated_data})
         flash(f"✏️ Flight {flight_id} updated.")
-        return redirect("/flights_mongo")
+        return redirect(url_for("flights_mongo"))
 
     return render_template("bookings/update_mongo.html", flight=flight)
 
@@ -237,10 +251,9 @@ def login():
             session["user_role"] = user.get("role", "user")
 
             flash("Logged in successfully.", "success")
-            next_url = request.args.get("next")
 
-            # secure redirect – only allow same-host URLs
-            if next_url and is_safe_url(next_url):
+            next_url = request.args.get("next")
+            if next_url and _is_safe_next_url(next_url):
                 return redirect(next_url)
             return redirect(url_for("home"))
         else:
@@ -270,7 +283,6 @@ def user_flights():
 # -----------------------------
 # BOOKINGS (CRUD)
 # -----------------------------
-# Create booking
 @app.route("/book/<flight_id>", methods=["GET", "POST"])
 @login_required
 def book_flight(flight_id):
@@ -307,7 +319,7 @@ def book_flight(flight_id):
 
         # Insert into MongoDB
         result = bookings_collection.insert_one(booking_doc)
-        booking_doc["_id"] = result.inserted_id  # not required but nice to have
+        booking_doc["_id"] = result.inserted_id
 
         # 🔔 Send SNS notification
         notify_new_booking(booking_doc, flight)
@@ -318,7 +330,6 @@ def book_flight(flight_id):
     return render_template("bookings/book_form.html", flight=flight)
 
 
-# Read bookings for logged-in user
 @app.route("/my-bookings")
 @login_required
 def my_bookings():
@@ -333,7 +344,6 @@ def my_bookings():
     return render_template("bookings/list.html", booking_details=booking_details)
 
 
-# Update booking
 @app.route("/booking/<booking_id>/edit", methods=["GET", "POST"])
 @login_required
 def edit_booking(booking_id):
@@ -365,7 +375,6 @@ def edit_booking(booking_id):
     return render_template("bookings/edit.html", booking=booking)
 
 
-# Cancel booking (hard delete)
 @app.route("/booking/<booking_id>/cancel", methods=["POST"])
 @login_required
 def cancel_booking(booking_id):
@@ -377,8 +386,10 @@ def cancel_booking(booking_id):
     return redirect(url_for("my_bookings"))
 
 
-# -----------------------------
+# ------------------------------------------------
 # MAIN
-# -----------------------------
+# ------------------------------------------------
 if __name__ == "__main__":
+    # Remember to set FLASK_SECRET_KEY (and optionally AWS_REGION, SNS_TOPIC_ARN)
+    # before running this script.
     app.run(host="0.0.0.0", port=5000, debug=True)
